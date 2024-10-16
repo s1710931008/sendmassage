@@ -35,12 +35,16 @@ function rungetWarn() {
 cron.schedule('0 17 * * *', () => {
     console.log('正在執行 total.js...');
     runTotal();
+}, {
+    timezone: 'Asia/Taipei'
 });
 
 // 使用 cron 排程設定每 15 分鐘執行 abc.js
 cron.schedule('*/15 * * * *', () => {
     console.log('正在執行 lineSend.js...');
     rungetWarn();
+}, {
+    timezone: 'Asia/Taipei'
 });
 
 console.log('排程已設置，每天下午 17:00 執行 lineSendTotal.js，並每 15 分鐘執行  lineSend.js');
