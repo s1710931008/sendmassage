@@ -74,6 +74,7 @@ async function insertPlantNos() {
             console.log(`Inserted plant numbers from index ${i} to ${i + batch.length - 1}.`);
         }
 
+        
         console.log('All plant numbers inserted successfully.');
     } catch (err) {
         console.error('Error inserting plant numbers:', err);
