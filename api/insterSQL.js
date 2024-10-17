@@ -66,7 +66,7 @@ async function insertPlantNos() {
         for (let i = 0; i < plantNos.length; i += batchSize) {
             const batch = plantNos.slice(i, i + batchSize); // 分割批次
             const insertPromises = batch.map(plantNo => {
-                return db.selectNewSQL('INSERT INTO public."LinkSite"("UserId", "plantNo") VALUES ($1, $2)', [2, plantNo])
+                return db.selectNewSQL('INSERT INTO public."LinkSite"("UserId", "plantNo") VALUES ($1, $2)', [3, plantNo])
                     .catch(err => console.error(`Error inserting plantNo ${plantNo}:`, err));
             });
 
