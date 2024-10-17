@@ -30,13 +30,10 @@ async function GetmsgInfo() {
                         w.id AS "warnId", w."plantNo", w."SiteName", w.msg, w.created_at, w.dreams_at,u.id AS user_id, 
                         u."userName", u."lineToken"
                     FROM public.warn w
-                    LEFT JOIN public.notification n 
-                        ON n."plantNo" = w."plantNo" 
+                    LEFT JOIN public.notification n ON n."plantNo" = w."plantNo" 
                         AND DATE(n.created_at) = CURRENT_DATE  -- 只匹配今天的 notification 記錄
-                    LEFT JOIN "LinkSite" l 
-                        ON l."plantNo" = w."plantNo"  -- JOIN LinkSite
-                    LEFT JOIN public.user u 
-                        ON u.id = l."UserId"         -- JOIN user
+                    LEFT JOIN "LinkSite" l ON l."plantNo" = w."plantNo"  -- JOIN LinkSite
+                    LEFT JOIN public.user u ON u.id = l."UserId"         -- JOIN user
                     WHERE w.created_at >= CURRENT_DATE                   -- 只選當天的 warn 記錄
                     AND (n."plantNo" IS NULL OR l."UserId" != CAST(n.user_id AS INTEGER))  -- 確保正確比較
                     AND NOT EXISTS (                                   -- 檢查是否存在相同 plantNo 的 notification
@@ -46,7 +43,7 @@ async function GetmsgInfo() {
                         AND DATE(n2.created_at) = CURRENT_DATE
                     ) 
                     ORDER BY w."plantNo", w.created_at DESC;            -- 依照 plantNo 和時間排序以確保選擇正確的記錄
-                        `;
+                    `;
 
         const result = await db.selectSQL(selectSQL);
         console.log(result);
