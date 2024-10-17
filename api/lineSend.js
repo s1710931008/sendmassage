@@ -27,8 +27,8 @@ async function GetmsgInfo() {
         // WHERE w.created_at >= CURRENT_DATE                   
         // AND n."plantNo" IS NULL;`;
         const selectSQL =`SELECT DISTINCT ON (w."plantNo", u.id)  -- 確保根據 plantNo 和 user_id 獨特
-                            w.id AS "warnId", w."plantNo", w."SiteName", w.msg, w.created_at, w.dreams_at,u.id AS user_id, u."userName", 
-                            u."lineToken",l."UserId" AS "linkedUserId"  -- 新增 UserId 來自 LinkSite
+                            w.id AS "warnId", w."plantNo", w."SiteName", w.msg, w.created_at, w.dreams_at,u.id AS user_id, 
+                            u."userName", u."lineToken",l."UserId" AS "linkedUserId"  -- 新增 UserId 來自 LinkSite
                         FROM public.warn w
                         LEFT JOIN public.notification n 
                             ON n."plantNo" = w."plantNo" 
