@@ -17,7 +17,7 @@ router.get('/', function(req, res, next) {
 
 router.put('/sendmsg/', async (req, res) => {
   try {
-    const jsonArray = [req.body];  // 從請求體中獲取資料
+    const jsonArray = req.body;  // 從請求體中獲取資料
     console.log(jsonArray);
 
     const contractsesults = await dbpg.UptData("public.\"warn\"", jsonArray);
