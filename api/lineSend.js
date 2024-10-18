@@ -8,7 +8,7 @@ async function saveSentMsgInfo(sentMsgInfo) {
     try {
         console.log(sentMsgInfo);
         await db.UptData("public.\"notification\"", sentMsgInfo);
-        console.log("已成功儲存已發送訊息的資訊");
+        console.log(`已成功儲存已發送訊息的資訊, 時間: ${moment().tz('Asia/Taipei').format('YYYY-MM-DD HH:mm:ss')}`);
     } catch (error) {
         console.error('儲存已發送訊息的資訊時發生錯誤：', error);
     }
@@ -77,7 +77,7 @@ async function fetchAndSendMsgNotification() {
                 // Send the notification
                 if(token){
                     await axios.post('https://notify-api.line.me/api/notify', body, { headers: headers });
-                    console.log('已成功發送 LINE Notify');
+                    console.log(`已成功發送 LINE Notify, 時間: ${moment().tz('Asia/Taipei').format('YYYY-MM-DD HH:mm:ss')}`);
     
                     sentMsgInfo.push({
                         plantNo: msg.plantNo,
@@ -93,7 +93,9 @@ async function fetchAndSendMsgNotification() {
                 console.error('發送通知時發生錯誤：', error);
             }
         }
-        await saveSentMsgInfo(sentMsgInfo);
+        if(sentMsgInfo.length > 0){
+            await saveSentMsgInfo(sentMsgInfo);
+        }
     } catch (error) {
         console.error('發生錯誤：', error);
     }
@@ -109,5 +111,5 @@ async function fetchAndSendMsgNotification() {
         await db.closeDB();
         process.exit(0);
     });
-    console.log('關閉 LINE Notify');
+    console.log(`關閉 LINE Notify, 時間: ${moment().tz('Asia/Taipei').format('YYYY-MM-DD HH:mm:ss')}`);
 })();
