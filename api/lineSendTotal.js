@@ -64,7 +64,7 @@ async function fetchAndSendMsgNotification() {
             try {
                 // Send the notification
                 await axios.post('https://notify-api.line.me/api/notify', body, { headers: headers });
-                console.log(`已成功發送 LINE Notify, 時間: ${moment().tz('Asia/Taipei').format('YYYY-MM-DD HH:mm:ss')}`);
+                console.log(`已成功發送 統計DRAMS LINE Notify, 時間: ${moment().tz('Asia/Taipei').format('YYYY-MM-DD HH:mm:ss')}`);
 
                 sentMsgInfo.push({
                     plantNo: msg.plantNo,
@@ -94,5 +94,5 @@ async function fetchAndSendMsgNotification() {
         await db.closeDB();
         process.exit(0);
     });
-    console.log(`關閉 LINE Notify, 時間: ${moment().tz('Asia/Taipei').format('YYYY-MM-DD HH:mm:ss')}`);
+    console.log(`關閉 統計DRAMS LINE Notify, 時間: ${moment().tz('Asia/Taipei').format('YYYY-MM-DD HH:mm:ss')}`);
 })();
