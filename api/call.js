@@ -15,6 +15,7 @@ function runTotal() {
         }
         console.log(`標準輸出: ${stdout}`);
     });
+
 }
 
 function rungetWarn() {
@@ -33,7 +34,7 @@ function rungetWarn() {
 
 // 使用 cron 排程設定每天 17:00 執行 total.js
 cron.schedule('0 17 * * *', () => {
-    console.log('正在執行 total.js...');
+    console.log(`正在執行 統計Drams 次數, 時間: ${moment().tz('Asia/Taipei').format('YYYY-MM-DD HH:mm:ss')}...`);
     runTotal();
 }, {
     timezone: 'Asia/Taipei'
@@ -41,10 +42,10 @@ cron.schedule('0 17 * * *', () => {
 
 // 使用 cron 排程設定每 15 分鐘執行 abc.js
 cron.schedule('*/15 * * * *', () => {
-    console.log('正在執行 lineSend.js...');
+    console.log(`正在執行 LINE Notify, 時間: ${moment().tz('Asia/Taipei').format('YYYY-MM-DD HH:mm:ss')}...`);
     rungetWarn();
 }, {
     timezone: 'Asia/Taipei'
 });
 
-console.log('排程已設置，每天下午 17:00 執行 lineSendTotal.js，並每 15 分鐘執行  lineSend.js');
+console.log('排程已設置，每天下午 17:00 執行 統計Drams次數，並每 15 分鐘執行  LINE Notify');
