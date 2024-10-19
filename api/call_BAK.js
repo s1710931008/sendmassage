@@ -4,7 +4,7 @@ const { exec } = require('child_process');
 
 // 定義執行函數
 function runTotal() {
-    exec('node lineSendTotal.js', (error, stdout, stderr) => {
+    exec('sudo node lineSendTotal.js', (error, stdout, stderr) => {
         if (error) {
             console.error(`執行錯誤: ${error.message}`);
             return;
@@ -19,7 +19,7 @@ function runTotal() {
 }
 
 function rungetWarn() {
-    exec('node lineSend.js', (error, stdout, stderr) => {
+    exec('sudo node lineSend.js', (error, stdout, stderr) => {
         if (error) {
             console.error(`執行錯誤: ${error.message}`);
             return;
@@ -41,7 +41,7 @@ cron.schedule('0 17 * * *', () => {
 });
 
 // 使用 cron 排程設定每 15 分鐘執行 abc.js
-cron.schedule('*/15 * * * *', () => {
+cron.schedule('*/1 * * * *', () => {
     console.log(`正在執行 LINE Notify, 時間: ${moment().tz('Asia/Taipei').format('YYYY-MM-DD HH:mm:ss')}...`);
     rungetWarn();
 }, {
