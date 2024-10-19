@@ -48,5 +48,4 @@ cron.schedule('*/1 * * * *', () => {
     timezone: 'Asia/Taipei'
 });
 
-
 console.log('排程已設置，每天下午 17:00 執行 統計Drams次數，並每 15 分鐘執行  LINE Notify');
