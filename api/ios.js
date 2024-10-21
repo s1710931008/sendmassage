@@ -3,7 +3,7 @@ const fs = require('fs').promises;
 const moment = require('moment');
 const db = require(__dirname + '/../model/dbOperations.js');
 const admin = require('firebase-admin');
-const serviceAccount = require('./igpcloud-firebase-adminsdk-pav8m-0c755546a2.json'); // 替換為你的 Firebase 服務帳戶憑證檔案
+const serviceAccount = require('./notifications-91cc5-firebase-adminsdk-305lo-484f349c04.json'); // 替換為你的 Firebase 服務帳戶憑證檔案
 
 // 初始化 Firebase Admin SDK
 admin.initializeApp({
