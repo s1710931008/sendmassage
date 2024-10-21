@@ -13,40 +13,63 @@ admin.initializeApp({
 // 連接到資料庫
 db.connectToDB();
 
-async function saveSentMsgInfo(sentMsgInfo) {
-    try {
-        console.log(sentMsgInfo);
-        await db.UptData("public.\"notification\"", sentMsgInfo);
-        console.log("已成功儲存已發送訊息的資訊");
-    } catch (error) {
-        console.error('儲存已發送訊息的資訊時發生錯誤：', error);
-    }
-}
+// async function saveSentMsgInfo(sentMsgInfo) {
+//     try {
+//         console.log(sentMsgInfo);
+//         await db.UptData("public.\"notification\"", sentMsgInfo);
+//         console.log("已成功儲存已發送訊息的資訊");
+//     } catch (error) {
+//         console.error('儲存已發送訊息的資訊時發生錯誤：', error);
+//     }
+// }
 
 async function getMsgInfo() {
     try {
-        const selectSQL = `
-            WITH firebase_tokens AS (
-                SELECT 
-                    u.id AS user_id,
-                    token ->> 'firebase_token' AS firebase_token
-                FROM public.user u,
-                json_array_elements(u."appToken") AS token
-            )
-            SELECT 
-                w.id AS "warnId", w."plantNo", w."SiteName", w.msg, w.created_at, 
-                w.dreams_at, ft.user_id, u."userName", ft.firebase_token
-            FROM public.warn w
-            LEFT JOIN public.notification n 
-                ON n."plantNo" = w."plantNo" 
-                AND DATE(n.created_at) = CURRENT_DATE            
-            LEFT JOIN "LinkSite" l ON l."plantNo" = w."plantNo"  
-            LEFT JOIN public.user u ON u.id = l."UserId"         
-            LEFT JOIN firebase_tokens ft ON ft.user_id = u.id  
-            WHERE w.created_at >= CURRENT_DATE                   
-            AND n."plantNo" IS NULL;
-        `;
+        // const selectSQL = `
+        //     WITH firebase_tokens AS (
+        //         SELECT 
+        //             u.id AS user_id,
+        //             token ->> 'firebase_token' AS firebase_token
+        //         FROM public.user u,
+        //         json_array_elements(u."appToken") AS token
+        //     )
+        //                     SELECT 
+        //                         w."plantNo", w."SiteName", w.msg, w.created_at, w.dreams_at, counts.count,u.id AS user_id, u."userName", u."lineToken"
+        //                     FROM public.warn w
+        //                     JOIN (
+        //                         SELECT "plantNo", COUNT(*) AS count
+        //                         FROM public.warn
+        //                         WHERE DATE(created_at) = CURRENT_DATE
+        //                         GROUP BY "plantNo"
+        //                     ) counts ON w."plantNo" = counts."plantNo"
+        //                     LEFT JOIN "LinkSite" l ON l."plantNo" = w."plantNo"
+        //                     LEFT JOIN public.user u ON u.id = l."UserId"
+        //                     WHERE DATE(w.created_at) = CURRENT_DATE
+        //                 )
+        // `;
 
+        const selectSQL =`WITH firebase_tokens AS (
+                            SELECT 
+                                u.id AS user_id,
+                                token ->> 'firebase_token' AS firebase_token
+                            FROM public.user u,
+                            json_array_elements(u."appToken") AS token
+                        )
+                        SELECT DISTINCT ON (w."plantNo") 
+                            w."plantNo", w."SiteName", w.msg, w.created_at, w.dreams_at, counts.count,
+                            u.id AS user_id, u."userName", u."lineToken", ft.firebase_token
+                        FROM public.warn w
+                        JOIN (
+                            SELECT "plantNo", COUNT(*) AS count
+                            FROM public.warn
+                            WHERE DATE(created_at) = CURRENT_DATE
+                            GROUP BY "plantNo"
+                        ) counts ON w."plantNo" = counts."plantNo"
+                        LEFT JOIN "LinkSite" l ON l."plantNo" = w."plantNo"
+                        LEFT JOIN public.user u ON u.id = l."UserId"
+                        LEFT JOIN firebase_tokens ft ON ft.user_id = u.id
+                        WHERE DATE(w.created_at) = CURRENT_DATE
+                        ORDER BY w."plantNo", w.created_at DESC;`
         const result = await db.selectSQL(selectSQL);
         console.log(result);
         return result;
@@ -83,10 +106,16 @@ async function fetchAndSendMsgNotification() {
                 token: token,
                 notification: {
                     title: 'Dreams 異常通知',
-                    body: `伺服器名稱: ${msg.SiteName}, 訊息: 【 ${msg.msg} 】, 發生時間: ${moment(msg.created_at).tz('Asia/Taipei').format('YYYY-MM-DD HH:mm:ss')}`,
+                    body: `案場名稱: ${msg.SiteName}, 訊息: 【 ${msg.msg} 】, 發報次數:【 ${msg.count} 】, Drams更新時間: ${moment(msg.dreams_at).format('YYYY-MM-DD HH:mm:ss')}`,
                 },
-            };
-
+                apns: {
+                  payload: {
+                    aps: {
+                      sound: 'default', // 或者指定你自己的聲音文件名稱
+                    },
+                  },
+                },
+              };
             // 發送推播通知
             await sendNotification(message);
 
@@ -100,7 +129,7 @@ async function fetchAndSendMsgNotification() {
             });
         }
 
-        await saveSentMsgInfo(sentMsgInfo);
+        // await saveSentMsgInfo(sentMsgInfo);
     } catch (error) {
         console.error('發送通知時發生錯誤：', error);
     }

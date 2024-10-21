@@ -27,7 +27,7 @@ cron.schedule('0 17 * * *', () => {
 });
 
 // 使用 cron 排程設定每 5 分鐘執行 lineSend.js
-cron.schedule('*/5 * * * *', () => {
+cron.schedule('*/5 5-19 * * *', () => {
     const currentTime = moment().tz('Asia/Taipei').format('YYYY-MM-DD HH:mm:ss');
     console.log(`正在執行 LINE Notify, 時間: ${currentTime}...`);
     executeScript('lineSend.js');
