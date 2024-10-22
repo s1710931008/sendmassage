@@ -7,7 +7,7 @@ db.connectToDB();
 async function saveSentMsgInfo(sentMsgInfo) {
     try {
         console.log(sentMsgInfo);
-        await db.UptData("public.\"notification\"", sentMsgInfo);
+        //await db.UptData("public.\"notification\"", sentMsgInfo);
         console.log(`已成功儲存已發送訊息的資訊, 時間: ${moment().tz('Asia/Taipei').format('YYYY-MM-DD HH:mm:ss')}`);
     } catch (error) {
         console.error('儲存已發送訊息的資訊時發生錯誤：', error);
