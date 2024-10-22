@@ -76,7 +76,7 @@ async function fetchAndSendMsgNotification() {
             try {
                 // Send the notification
                 if(token){
-                    //await axios.post('https://notify-api.line.me/api/notify', body, { headers: headers });
+                    await axios.post('https://notify-api.line.me/api/notify', body, { headers: headers });
                     console.log(`已成功發送 LINE Notify, 時間: ${moment().tz('Asia/Taipei').format('YYYY-MM-DD HH:mm:ss')}`);
     
                     sentMsgInfo.push({
