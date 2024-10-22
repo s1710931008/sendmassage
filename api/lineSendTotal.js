@@ -58,7 +58,7 @@ async function fetchAndSendMsgNotification() {
                 'Authorization': 'Bearer ' + token
             };
             const body = new URLSearchParams({
-                'message': `案場名稱: ${msg.SiteName}, 訊息: 【 ${msg.msg} 】, 發報次數:【 ${msg.count} 】, Drams更新時間: ${moment(msg.dreams_at).format('YYYY-MM-DD HH:mm:ss')}`
+                'message': `異常統計\n案場名稱：${msg.SiteName}\n發報次數：【 ${msg.count} 】`
             });
 
             try {
