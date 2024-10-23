@@ -70,7 +70,7 @@ async function fetchAndSendMsgNotification() {
                 'Authorization': 'Bearer ' + token
             };
             const body = new URLSearchParams({
-                'message': `異常通報\n案場名稱：${msg.SiteName}\n最後更新時間：${moment(msg.dreams_at).format('YYYY-MM-DD HH:mm:ss')}`
+                'message': `異常通報-${msg.msg}\n案場名稱：${msg.SiteName}\n最後更新時間：${moment(msg.dreams_at).format('YYYY-MM-DD HH:mm:ss')}`
             });
 
             try {
