@@ -70,13 +70,13 @@ async function fetchAndSendMsgNotification() {
                 'Authorization': 'Bearer ' + token
             };
             const body = new URLSearchParams({
-                'message': `異常通報-${msg.msg}\n案場名稱：${msg.SiteName}\n最後更新時間：${moment(msg.dreams_at).format('YYYY-MM-DD HH:mm:ss')}`
+                'message': `異常通報\n案場名稱：${msg.SiteName}\n最後更新時間：${moment(msg.dreams_at).format('YYYY-MM-DD HH:mm:ss')}`
             });
 
             try {
                 // Send the notification
                 if(token){
-                    await axios.post('https://notify-api.line.me/api/notify', body, { headers: headers });
+                    //await axios.post('https://notify-api.line.me/api/notify', body, { headers: headers });
                     console.log(`已成功發送 LINE Notify, 時間: ${moment().tz('Asia/Taipei').format('YYYY-MM-DD HH:mm:ss')}`);
     
                     sentMsgInfo.push({
