@@ -17,7 +17,7 @@ async function saveSentMsgInfo(sentMsgInfo) {
 async function GetmsgInfo() {
     try {
         const selectSQL = `WITH RankedWarnings AS (
-                            SELECT 
+                            SELECT DISTINCT ON (w."plantNo", u.id)  -- 確保根據 plantNo 和 user_id 獨特
                                 w."plantNo", w."SiteName", w.msg, w.created_at, w.dreams_at, counts.count,u.id AS user_id, u."userName", u."lineToken"
                             FROM public.warn w
                             JOIN (
