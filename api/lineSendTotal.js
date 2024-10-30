@@ -84,7 +84,7 @@ async function fetchAndSendMsgNotification() {
     }
 }
 
-// Create an async function to run the main logic
+// Create an async function to run the main logic 
 (async () => {
     await fetchAndSendMsgNotification(); // Now we can use await here
 
@@ -94,5 +94,5 @@ async function fetchAndSendMsgNotification() {
         await db.closeDB();
         process.exit(0);
     });
-    console.log(`關閉 統計DRAMS LINE Notify, 時間: ${moment().tz('Asia/Taipei').format('YYYY-MM-DD HH:mm:ss')}`);
+    console.log(`關閉 統計DREAMS LINE Notify, 時間: ${moment().tz('Asia/Taipei').format('YYYY-MM-DD HH:mm:ss')}`);
 })();
