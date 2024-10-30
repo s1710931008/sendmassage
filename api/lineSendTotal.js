@@ -58,7 +58,7 @@ async function fetchAndSendMsgNotification() {
                 'Authorization': 'Bearer ' + token
             };
             const body = new URLSearchParams({
-                'message': `異常統計\n案場名稱：${msg.SiteName}\n發報次數：【 ${msg.count} 】`
+                'message': `異常統計\n【 ${msg.plantNo} 】案場名稱：${msg.SiteName}\n發報次數：【 ${msg.count} 】`
             });
 
             try {

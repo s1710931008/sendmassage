@@ -2,6 +2,8 @@ const db = require(__dirname + '/../model/dbOperations.js');
 
 // 將 plantNo 列表
 const plantNos = [
+    "20715535962",
+    "11777652953",
     "18331400027",
     "11563587891",
     "11563587880",
