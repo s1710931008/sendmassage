@@ -4,9 +4,9 @@ module.exports = {
     dashboardRounds:8,
     //PostgreSQL
     PG_USER: 'postgres',
-    PG_HOST: '10.1.1.123',
+    PG_HOST: '10.1.1.180',
     PG_DATABASE: 'postgres',
-    PG_PASSWORD: '80466612',
+    PG_PASSWORD: 'rs@80466612',
     PG_PORT:'5432',
     //InfluxDB
     //TCP Server
