@@ -44,6 +44,7 @@ router.get('/files', async (req, res) => {
     queryParams.push(pageSize);
     queryParams.push(offset);
 
+    
     const filesSQL = `
       SELECT id, filename, file_path, 
       to_char(uploaded_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Taipei', 'YYYY-MM-DD HH24:MI:SS') AS uploaded_at_taiwan,  
