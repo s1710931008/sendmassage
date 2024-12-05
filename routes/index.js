@@ -210,6 +210,34 @@ router.put('/edit', async (req, res) => {
   }
 });
 
+router.delete('/delFile/:id', async (req, res) => {
+  try {
+    const sid = req.params.id;
+    
+
+    const DelLevaeSQL = `DELETE FROM public.files  WHERE id = $1`;
+    const DelLevaeQuery = await dbpg.deleteSQL(DelLevaeSQL, [sid]);
+    console.log(DelLevaeQuery)
+    if (DelLevaeQuery > 0) {
+      res.json({
+        code: 200,
+        msg: "刪除成功"
+      });
+    } else {
+      res.json({
+        code: 404,
+        msg: '刪除失敗',
+      });
+    }
+  } catch (err) {
+    console.error('Error fetching files:', err);
+    res.json({
+      code: 500,
+      msg: 'Internal Server Error',
+    });
+  }
+});
+
 
 router.put('/sendmsg/', async (req, res) => {
   try {
