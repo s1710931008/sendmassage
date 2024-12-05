@@ -20,14 +20,14 @@ const moment = require('moment-timezone');
 moment.tz.setDefault('Asia/Taipei'); // 設定時區為台北
 
 /* GET home page. */
-router.get('/', function(req, res, next) {
+router.get('/', function (req, res, next) {
   res.render('index', { title: 'Express' });
 });
 
 
 router.post('/login', async (req, res) => {
   const clientIP = req.ip; // 獲取客戶端 IP
-  const { name, password } = req.body;
+  const { username, password } = req.body;
 
   // password_hash = bcrypt.hashSync(password, CONFIG.saltRounds);
   // console.log("password_hash", password_hash)
@@ -35,13 +35,13 @@ router.post('/login', async (req, res) => {
   try {
     // 查詢用戶資料（參數化查詢防止 SQL 注入）
     const selectSQL = 'SELECT * FROM public."usersWeb" WHERE email = $1';
-    const results = await dbpg.selectNewSQL(selectSQL, [name]);
+    const results = await dbpg.selectNewSQL(selectSQL, [username]);
 
     // 如果查詢無結果，記錄日誌並回應 401
     if (!results || results.length === 0) {
       const formattedTime = moment().tz('Asia/Taipei').format('YYYY-MM-DD HH:mm:ss');
-      console.log(`查無資料，記錄失敗日誌: ${name}`);
-      logger.write(`[Time: ${formattedTime}] ${clientIP} 登入失敗，無效的使用者名稱:${name}, 密碼:${password} \n`);
+      console.log(`查無資料，記錄失敗日誌: ${username}`);
+      logger.write(`[Time: ${formattedTime}] ${clientIP} 登入失敗，無效的使用者名稱:${username}, 密碼:${password} \n`);
       return res.status(401).json({ message: '無效的使用者名稱或密碼' });
     }
 
@@ -132,14 +132,22 @@ router.get('/files', async (req, res) => {
       QuerySql += ` AND month = $${queryParams.length}`;
     }
 
+    const totalSQL = `
+    SELECT count(id) as total
+    FROM public.files
+    ${QuerySql}
+  `;
+    const totalResult = await dbpg.selectNewSQL(totalSQL, queryParams);
+    const total = totalResult[0].total
+    const pageTotal = Math.ceil(total / pageSize); // Calculate total pages
     // 添加 LIMIT 和 OFFSET
     queryParams.push(pageSize);
     queryParams.push(offset);
 
-    
+
     const filesSQL = `
       SELECT id, filename, file_path, 
-      to_char(uploaded_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Taipei', 'YYYY-MM-DD HH24:MI:SS') AS uploaded_at_taiwan,  
+      to_char(uploaded_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Taipei', 'YYYY-MM-DD HH24:MI:SS') AS uploaded_at,  
       year, month, type
       FROM public.files
       ${QuerySql}
@@ -147,11 +155,15 @@ router.get('/files', async (req, res) => {
       LIMIT $${queryParams.length - 1} OFFSET $${queryParams.length}
     `;
     const filesResult = await dbpg.selectNewSQL(filesSQL, queryParams);
-    console.log(filesSQL);
+
+
+
 
     if (filesResult.length !== 0) {
       res.json({
         code: 200,
+        total: Number(total),
+        pageTotal: pageTotal,
         data: filesResult,
       });
     } else {
@@ -169,6 +181,34 @@ router.get('/files', async (req, res) => {
   }
 });
 
+
+router.put('/edit', async (req, res) => {
+  try {
+
+    const data = [req.body];
+    console.log(data)
+    const results = await dbpg.UptData("public.\"files\"", data);
+
+
+    if (results.length !== 0) {
+      res.json({
+        code: 200,
+        results
+      });
+    } else {
+      res.json({
+        code: 404,
+        msg: 'Data not found',
+      });
+    }
+  } catch (err) {
+    console.error('Error fetching files:', err);
+    res.json({
+      code: 500,
+      msg: 'Internal Server Error',
+    });
+  }
+});
 
 
 router.put('/sendmsg/', async (req, res) => {
