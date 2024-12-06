@@ -13,6 +13,10 @@ const jwt = require('jsonwebtoken')
 //bcrypt
 const bcrypt = require('bcryptjs')
 
+//上傳檔案
+const formidable = require('formidable');
+const fs = require('fs');
+const path = require('path');
 
 
 // const moment = require('moment');
@@ -151,7 +155,7 @@ router.get('/files', async (req, res) => {
       year, month, type
       FROM public.files
       ${QuerySql}
-      ORDER BY year, month DESC
+      ORDER BY year DESC, month DESC
       LIMIT $${queryParams.length - 1} OFFSET $${queryParams.length}
     `;
     const filesResult = await dbpg.selectNewSQL(filesSQL, queryParams);
@@ -210,10 +214,176 @@ router.put('/edit', async (req, res) => {
   }
 });
 
+
+router.post('/uploadsFiles', async (req, res) => {
+  try {
+    /**上傳檔案路徑目錄 */
+    const uploadDir = path.join(__dirname, '../../RS-Vue3-Pleng/public/uploads/');
+    /**判斷是否有目錄，如果沒有建立目錄 */
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+      fs.chmodSync(uploadDir, 0o775);
+    }
+
+    // 檢查文件是否可以訪問並且未被鎖定
+    function isFileUnlocked(filePath) {
+      try {
+        fs.accessSync(filePath, fs.constants.R_OK | fs.constants.W_OK);
+        return true;
+      } catch (err) {
+        return false;
+      }
+    }
+
+    // 等待文件釋放的函數
+    async function waitForFileRelease(filePath, maxAttempts = 10, delay = 1000) {
+      let attempts = 0;
+      while (!isFileUnlocked(filePath) && attempts < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, delay));
+        attempts++;
+      }
+      return isFileUnlocked(filePath);
+    }
+
+    const form = new formidable.IncomingForm();
+    form.uploadDir = uploadDir; //檔案路徑
+    form.keepExtensions = true;
+
+    const { fields, files } = await new Promise((resolve, reject) => {
+      form.parse(req, (err, fields, files) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve({ fields, files });
+        }
+      });
+    });
+
+    /**定義可上傳檔案 */
+    const allowedTypes = ['application/pdf']; // PDF 文件
+    const uploadedFiles = Object.values(files).flat();
+    console.log("上傳的文件：", uploadedFiles); // 顯示上傳檔案資訊
+
+    let savedFiles = [];
+    for (const file of uploadedFiles) {
+      if (!allowedTypes.includes(file.mimetype)) {
+        fs.unlink(file.filepath, err => {
+          if (err) {
+            console.error(`刪除不允許類型文件失敗：${file.filepath}`, err);
+          }
+        });
+        throw new Error(`不允許的文件類型：${file.mimetype}`);
+      }
+
+      // 檢查文件大小
+      const maxSize = 5 * 1024 * 1024; // 5MB
+      if (file.size > maxSize) {
+        // 刪除過大的文件
+        fs.unlink(file.filepath, err => {
+          if (err) {
+            console.error(`刪除過大檔案失敗：${file.originalFilename}`, err);
+          }
+        });
+        throw new Error(`文件過大：${file.originalFilename}`);
+      }
+
+      const originalFilePath = file.filepath; // 暫時上傳檔的文件路徑位置
+      const originalFileName = file.originalFilename; // 保留原始上傳檔案名稱
+      const targetFilePath = path.join(uploadDir, originalFileName); // 檔案路徑JOIN原始檔案名稱
+
+      console.log(targetFilePath);
+
+      try {
+        // 等待文件釋放後再進行刪除
+        const fileReleased = await waitForFileRelease(originalFilePath);
+        if (fileReleased) {
+          // 如果目標檔案已經存在，則直接覆蓋
+          if (fs.existsSync(targetFilePath)) {
+            console.log(`檔案已存在，進行覆蓋：${originalFileName}`);
+            fs.unlinkSync(targetFilePath); // 刪除現有的檔案
+          }
+          fs.renameSync(originalFilePath, targetFilePath); // 移動文件
+        } else {
+          console.error(`文件仍在被佔用，無法刪除：${originalFilePath}`);
+        }
+
+        savedFiles.push(originalFileName); // 使用原始文件名
+      } catch (err) {
+        console.error(`處理文件失敗：${err.message}`);
+        // 如果有錯誤發生，記得進行適當的錯誤處理，例如刪除已保存的文件等
+        savedFiles.forEach(savedFilePath => {
+          fs.unlink(savedFilePath, err => {
+            if (err) {
+              console.error(`刪除已保存文件失敗：${savedFilePath}`, err);
+            }
+          });
+        });
+        throw err; // 將錯誤向上拋出，讓 Express 處理
+      }
+    }
+
+    // 返回成功訊息
+    res.json({ code: 200, message: '文件上傳成功', files: savedFiles });
+
+  } catch (error) {
+    console.error('文件上傳失敗:', error.message);
+    res.status(500).json({ error: `文件上傳失敗：${error.message}` });
+  }
+});
+
+
+
+router.post('/uploadsFiles_', async (req, res) => {
+  try {
+
+    const data = [req.body];
+    console.log(data)
+    const results = await dbpg.UptData("public.\"files\"", data);
+
+
+    if (results.length !== 0) {
+      res.json({
+        code: 200,
+        results
+      });
+    } else {
+      res.json({
+        code: 404,
+        msg: 'Data not found',
+      });
+    }
+  } catch (err) {
+    console.error('Error fetching files:', err);
+    res.json({
+      code: 500,
+      msg: 'Internal Server Error',
+    });
+  }
+});
+
+
 router.delete('/delFile/:id', async (req, res) => {
   try {
     const sid = req.params.id;
-    
+    const uploadDir = path.join(__dirname, '../../RS-Vue3-Pleng/public/uploads/');
+    const searchSQL = `SELECT file_path FROM public.files  WHERE id = $1`;
+    const searchQuery = await dbpg.selectNewSQL(searchSQL, [sid]);
+
+
+    if (searchQuery.length > 0) {
+      const PDFfile = searchQuery[0].file_path;
+      const filePath = uploadDir + PDFfile;
+
+      if (fs.existsSync(filePath)) {
+        fs.unlink(filePath, err => {
+          if (err) {
+            console.error(`刪除過大檔案失敗：${PDFfile}`, err);
+          } else {
+            console.log(`文件已成功刪除：${PDFfile}`);
+          }
+        });
+      }
+    }
 
     const DelLevaeSQL = `DELETE FROM public.files  WHERE id = $1`;
     const DelLevaeQuery = await dbpg.deleteSQL(DelLevaeSQL, [sid]);
