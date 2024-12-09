@@ -7,6 +7,7 @@ var logger = require('morgan');
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 var adminRouter = require('./routes/admin');
+const CONFIG = require(__dirname + '/config/config');
 
 var app = express();
 
@@ -23,6 +24,27 @@ app.use(express.static(path.join(__dirname, 'public')));
 //導入 postgresql
 const dbpg = require(__dirname + '/model/dbOperations.js');
 
+
+//驗證碼二
+const expressJWT = require('express-jwt');
+// app.use(expressJWT({ secret: jwtSecretKey }).unless({ path: ['/^\/api/'] }));
+// 相符的路徑無需進行 JWT 驗證。
+app.use(expressJWT({ secret: CONFIG.jwtSecretKey }).unless({
+  path: [
+    /\/api-doc/,
+    /\/login/,
+    /\/line/,
+    /^\/ssc(\/.*)?$/, // 確保 /ssc 及其子路徑都被正確排除
+    /\/dashboard/,
+    /\/forgot/,
+    /\/ssc1/,
+    /\/maintenance\/download/,
+    /\/sendLocation/,
+    /\/getLocation/,
+    /\/public\/images/, // 添加 public/images 到 unless 的路徑中
+    '/favicon.ico' // 特別排除 favicon.ico 請求
+  ]
+}));
 
 // 在應用程式啟動時打開數據連接資料庫
 app.use(async (req, res, next) => {
@@ -59,6 +81,25 @@ process.on('SIGINT', async () => {
     }
   }
 });
+
+
+app.use((err, req, res, next) => {
+  console.log(err);
+  if (err) {
+    if (err.name === 'UnauthorizedError') {
+      if (err.inner && err.inner.name === 'TokenExpiredError') {
+        return res.status(401).json({ msg: 'Token 已過期', authorization: false, expiredAt: err.inner.expiredAt });
+      } else {
+        return res.status(401).json({ msg: '登入失敗', authorization: false, error: '未取得授權' });
+      }
+    } else {
+      // 处理其他错误
+      return res.status(403).json({ msg: '登入失敗', authorization: false, error: err.message });
+    }
+  }
+  next();
+});
+
 
 
 app.use('/', indexRouter);
