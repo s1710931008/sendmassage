@@ -23,6 +23,9 @@ const path = require('path');
 const moment = require('moment-timezone');
 moment.tz.setDefault('Asia/Taipei'); // 設定時區為台北
 
+//CryptoJS 解密 AES 加密的密碼
+const CryptoJS = require("crypto-js");
+
 /* GET home page. */
 router.get('/', function (req, res, next) {
   res.render('index', { title: 'Express' });
@@ -35,6 +38,15 @@ router.post('/login', async (req, res) => {
 
   // password_hash = bcrypt.hashSync(password, CONFIG.saltRounds);
   // console.log("password_hash", password_hash)
+  const decryptPassword = (encryptedPassword) => {
+    const bytes = CryptoJS.AES.decrypt(encryptedPassword, 'IGP-Key');
+    const originalPassword = bytes.toString(CryptoJS.enc.Utf8);
+    return originalPassword;
+  };
+
+  let abc = decryptPassword(password)
+  console.log(decryptPassword(password),password)
+  
 
   try {
     // 查詢用戶資料（參數化查詢防止 SQL 注入）
@@ -52,7 +64,7 @@ router.post('/login', async (req, res) => {
     const user = results[0]; // 提取用戶資料
 
     // 比較密碼（使用非同步 bcrypt.compare）
-    const passwordMatch = await bcrypt.compare(password, user.password);
+    const passwordMatch = await bcrypt.compare(abc, user.password);
 
     if (!passwordMatch) {
       const formattedTime = moment().tz('Asia/Taipei').format('YYYY-MM-DD HH:mm:ss');
