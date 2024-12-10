@@ -93,7 +93,7 @@ app.use((err, req, res, next) => {
         return res.status(401).json({ msg: '登入失敗', authorization: false, error: '未取得授權' });
       }
     } else {
-      // 处理其他错误
+      // 處理其他的錯誤
       return res.status(403).json({ msg: '登入失敗', authorization: false, error: err.message });
     }
   }

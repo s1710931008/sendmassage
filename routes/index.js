@@ -69,7 +69,7 @@ router.post('/login', async (req, res) => {
         clientIP: clientIP,
       },
       CONFIG.jwtSecretKey,
-      { expiresIn: 60 * 60 * 24 * 7 } // 7 天有效期
+      { expiresIn: 60 * 60 * 24 * 1 } // 7 天有效期
     );
 
     // 更新登入時間與 Token
