@@ -31,12 +31,10 @@ const expressJWT = require('express-jwt');
 // 相符的路徑無需進行 JWT 驗證。
 app.use(expressJWT({ secret: CONFIG.jwtSecretKey }).unless({
   path: [
-    /\/api-doc/,
     /\/login/,
-    /\/line/,
-    /^\/ssc(\/.*)?$/, // 確保 /ssc 及其子路徑都被正確排除
-    /\/dashboard/,
-    /\/forgot/,
+    /\/dropdown_moth/,
+    /\/dropdown_year/,
+    /\/files/,
     /\/ssc1/,
     /\/maintenance\/download/,
     /\/sendLocation/,

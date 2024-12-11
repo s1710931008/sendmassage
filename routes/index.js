@@ -198,6 +198,115 @@ router.get('/files', async (req, res) => {
 });
 
 
+router.get('/dropdown_moth', async (req, res) => {
+  try {
+
+    const { type, year, month } = req.query;
+
+    let queryParams = [];
+    let QuerySql = `WHERE 1=1`; // 初始條件
+
+    if (type) {
+      queryParams.push(type);
+      QuerySql += ` AND type = $${queryParams.length}`;
+    }
+    if (year) {
+      queryParams.push(year);
+      QuerySql += ` AND year = $${queryParams.length}`;
+    }
+    if (month) {
+      queryParams.push(month);
+      QuerySql += ` AND month = $${queryParams.length}`;
+    }
+
+
+    const filesSQL = `
+      SELECT DISTINCT month
+      FROM public.files
+      ${QuerySql}
+      order by month`;
+
+    console.log(filesSQL, queryParams)
+    const filesResult = await dbpg.selectNewSQL(filesSQL, queryParams);
+
+
+
+
+    if (filesResult.length !== 0) {
+      res.json({
+        code: 200,
+        data: filesResult,
+      });
+    } else {
+      res.json({
+        code: 404,
+        msg: 'Data not found',
+      });
+    }
+  } catch (err) {
+    console.error('Error fetching files:', err);
+    res.json({
+      code: 500,
+      msg: 'Internal Server Error',
+    });
+  }
+});
+
+
+router.get('/dropdown_year', async (req, res) => {
+  try {
+
+    const { type, year, month } = req.query;
+
+    let queryParams = [];
+    let QuerySql = `WHERE 1=1`; // 初始條件
+
+    if (type) {
+      queryParams.push(type);
+      QuerySql += ` AND type = $${queryParams.length}`;
+    }
+    if (year) {
+      queryParams.push(year);
+      QuerySql += ` AND year = $${queryParams.length}`;
+    }
+    if (month) {
+      queryParams.push(month);
+      QuerySql += ` AND month = $${queryParams.length}`;
+    }
+
+
+    const filesSQL = `
+      SELECT DISTINCT year
+      FROM public.files
+      ${QuerySql}
+      order by year`;
+
+    console.log(filesSQL, queryParams)
+    const filesResult = await dbpg.selectNewSQL(filesSQL, queryParams);
+
+
+
+
+    if (filesResult.length !== 0) {
+      res.json({
+        code: 200,
+        data: filesResult,
+      });
+    } else {
+      res.json({
+        code: 404,
+        msg: 'Data not found',
+      });
+    }
+  } catch (err) {
+    console.error('Error fetching files:', err);
+    res.json({
+      code: 500,
+      msg: 'Internal Server Error',
+    });
+  }
+});
+
 router.put('/edit', async (req, res) => {
   try {
 
