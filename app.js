@@ -37,7 +37,7 @@ const expressJWT = require('express-jwt');
 // 相符的路徑無需進行 JWT 驗證。
 app.use(expressJWT({ secret: CONFIG.jwtSecretKey }).unless({
   path: [
-    /\/login/,
+    /\/api\/login/,
     /\/api\/dropdown_moth/,
     /\/api\/dropdown_year/,
     /\/api\/files/,
