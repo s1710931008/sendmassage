@@ -25,6 +25,11 @@ app.use(express.static(path.join(__dirname, 'public')));
 //導入 postgresql
 const dbpg = require(__dirname + '/model/dbOperations.js');
 
+app.use(cors({
+  origin: '*', // 或者指定你的 Vue 前端網址，例如 http://10.1.1.180
+  methods: 'GET,POST,PUT,DELETE',
+  allowedHeaders: ['Authorization', 'Content-Type']
+}));
 
 //驗證碼二
 const expressJWT = require('express-jwt');
@@ -111,11 +116,7 @@ app.use(function(req, res, next) {
   next(createError(404));
 });
 
-app.use(cors({
-  origin: '*', // 或者指定你的 Vue 前端網址，例如 http://10.1.1.180
-  methods: 'GET,POST,PUT,DELETE',
-  allowedHeaders: ['Authorization', 'Content-Type']
-}));
+
 
 // error handler
 app.use(function(err, req, res, next) {
