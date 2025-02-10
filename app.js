@@ -8,6 +8,7 @@ var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 var adminRouter = require('./routes/admin');
 const CONFIG = require(__dirname + '/config/config');
+const cors = require('cors');
 
 var app = express();
 
@@ -64,6 +65,11 @@ app.use(async (req, res, next) => {
 // 在應用程序關時，即刻關閉 postgresql 資料庫連接
 let closing = false;
 
+app.use(cors({
+  origin: '*', // 或者指定你的 Vue 前端網址，例如 http://10.1.1.180
+  methods: 'GET,POST,PUT,DELETE',
+  allowedHeaders: ['Authorization', 'Content-Type']
+}));
 
 process.on('SIGINT', async () => {
   if (!closing) {
