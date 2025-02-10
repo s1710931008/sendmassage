@@ -40,7 +40,6 @@ app.use(expressJWT({ secret: CONFIG.jwtSecretKey }).unless({
     /\/login/,
     /\/dropdown_moth/,
     /\/dropdown_year/,
-    /\/api\/files/,
     /\/files/,
     /\/ssc1/,
     /\/maintenance\/download/,
