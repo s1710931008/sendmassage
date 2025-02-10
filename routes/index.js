@@ -32,7 +32,7 @@ router.get('/', function (req, res, next) {
 });
 
 
-router.post('/api/login', async (req, res) => {
+router.post('/login', async (req, res) => {
   const clientIP = req.ip; // 獲取客戶端 IP
   const { username, password } = req.body;
 
@@ -198,7 +198,7 @@ router.get('/files', async (req, res) => {
 });
 
 
-router.get('/api/dropdown_moth', async (req, res) => {
+router.get('/dropdown_moth', async (req, res) => {
   try {
 
     const { type, year, month } = req.query;
@@ -253,7 +253,7 @@ router.get('/api/dropdown_moth', async (req, res) => {
 });
 
 
-router.get('/api/dropdown_year', async (req, res) => {
+router.get('/dropdown_year', async (req, res) => {
   try {
 
     const { type, year, month } = req.query;
@@ -307,7 +307,7 @@ router.get('/api/dropdown_year', async (req, res) => {
   }
 });
 
-router.put('/api//edit', async (req, res) => {
+router.put('/edit', async (req, res) => {
   try {
 
     const data = [req.body];
@@ -336,7 +336,7 @@ router.put('/api//edit', async (req, res) => {
 });
 
 
-router.post('/api//uploadsFiles', async (req, res) => {
+router.post('/uploadsFiles', async (req, res) => {
   try {
     /**上傳檔案路徑目錄 */
     const uploadDir = path.join(__dirname, '../../RS-Vue3-Pleng/public/uploads/');
@@ -454,7 +454,7 @@ router.post('/api//uploadsFiles', async (req, res) => {
 
 
 
-router.post('/api//uploadsFiles_', async (req, res) => {
+router.post('/uploadsFiles_', async (req, res) => {
   try {
 
     const data = [req.body];
@@ -483,7 +483,7 @@ router.post('/api//uploadsFiles_', async (req, res) => {
 });
 
 
-router.delete('/api//delFile/:id', async (req, res) => {
+router.delete('/delFile/:id', async (req, res) => {
   try {
     const sid = req.params.id;
     const uploadDir = path.join(__dirname, '../../RS-Vue3-Pleng/public/uploads/');
