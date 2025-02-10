@@ -123,7 +123,7 @@ router.post('/api/login', async (req, res) => {
 });
 
 
-router.get('/api/files', async (req, res) => {
+router.get('/files', async (req, res) => {
   try {
     /** 預設值 */
     let page = parseInt(req.query.page) || 1;
