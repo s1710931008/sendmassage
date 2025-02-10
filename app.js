@@ -38,8 +38,8 @@ const expressJWT = require('express-jwt');
 app.use(expressJWT({ secret: CONFIG.jwtSecretKey }).unless({
   path: [
     /\/login/,
-    /\/dropdown_moth/,
-    /\/dropdown_year/,
+    /\/api\/dropdown_moth/,
+    /\/api\/dropdown_year/,
     /\/api\/files/,
     /\/files/,
     /\/ssc1/,
