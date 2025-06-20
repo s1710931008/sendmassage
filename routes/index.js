@@ -31,6 +31,7 @@ router.get('/', function (req, res, next) {
   res.render('index', { title: 'Express' });
 });
 
+let uploadDir = path.join(__dirname, '../../website/uploads/');
 
 router.post('/login', async (req, res) => {
   const clientIP = req.ip; // 獲取客戶端 IP
@@ -339,7 +340,8 @@ router.put('/edit', async (req, res) => {
 router.post('/uploadsFiles', async (req, res) => {
   try {
     /**上傳檔案路徑目錄 */
-    const uploadDir = path.join(__dirname, '../../RS-Vue3-Pleng/public/uploads/');
+    // const uploadDir = path.join(__dirname, '../../RS-Vue3-Pleng/public/uploads/');
+    // const uploadDir = path.join(__dirname, '../../website/uploads/');
     /**判斷是否有目錄，如果沒有建立目錄 */
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
@@ -486,7 +488,7 @@ router.post('/uploadsFiles_', async (req, res) => {
 router.delete('/delFile/:id', async (req, res) => {
   try {
     const sid = req.params.id;
-    const uploadDir = path.join(__dirname, '../../RS-Vue3-Pleng/public/uploads/');
+    // const uploadDir = path.join(__dirname, '../../RS-Vue3-Pleng/public/uploads/');
     const searchSQL = `SELECT file_path FROM public.files  WHERE id = $1`;
     const searchQuery = await dbpg.selectNewSQL(searchSQL, [sid]);
 
