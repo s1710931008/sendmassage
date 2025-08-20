@@ -4,7 +4,7 @@ module.exports = {
     dashboardRounds:8,
     //PostgreSQL
     PG_USER: 'postgres',
-    PG_HOST: '10.1.3.14',
+    PG_HOST: '10.1.3.13',
     PG_DATABASE: 'postgres',
     PG_PASSWORD: 'rs@80466612',
     PG_PORT:'5432',
