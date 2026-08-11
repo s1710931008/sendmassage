@@ -1,13 +1,19 @@
+const path = require('path');
 module.exports = {
-    jwtSecretKey : 'IGP-Key',
-    saltRounds:10,
-    dashboardRounds:8,
+    jwtSecretKey: 'IGP-Key',
+    saltRounds: 10,
+    dashboardRounds: 8,
+    // SQLite
+    SQLITE_DB_PATH: path.join(
+        __dirname,
+        '../../DB/db.sqlite'
+    ),
     //PostgreSQL
     PG_USER: 'postgres',
-    PG_HOST: '10.1.1.180',
+    PG_HOST: '10.1.3.13',
     PG_DATABASE: 'postgres',
     PG_PASSWORD: 'rs@80466612',
-    PG_PORT:'5432',
+    PG_PORT: '5432',
     //InfluxDB
     //TCP Server
     TCP_HOST: '127.0.0.1',

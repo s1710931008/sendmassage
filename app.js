@@ -7,6 +7,9 @@ var logger = require('morgan');
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 var adminRouter = require('./routes/admin');
+var news = require('./routes/news');
+var about = require('./routes/about');
+
 const CONFIG = require(__dirname + '/config/config');
 
 var app = express();
@@ -31,17 +34,37 @@ const expressJWT = require('express-jwt');
 // 相符的路徑無需進行 JWT 驗證。
 app.use(expressJWT({ secret: CONFIG.jwtSecretKey }).unless({
   path: [
-    /\/api-doc/,
     /\/login/,
-    /\/line/,
+    /\/news/,
     /^\/ssc(\/.*)?$/, // 確保 /ssc 及其子路徑都被正確排除
     /\/dashboard/,
     /\/forgot/,
-    /\/ssc1/,
     /\/maintenance\/download/,
     /\/sendLocation/,
     /\/getLocation/,
     /\/public\/images/, // 添加 public/images 到 unless 的路徑中
+    // ==================================================
+    // News 公開 API
+    // GET 不需要 Token
+    // ==================================================
+    {
+      url: '/news',
+      methods: ['GET']
+    },
+
+    {
+      url: '/news/items',
+      methods: ['GET']
+    },
+    // About 公開 GET
+    {
+      url: '/about',
+      methods: ['GET']
+    },
+    {
+      url: '/about/',
+      methods: ['GET']
+    },
     '/favicon.ico' // 特別排除 favicon.ico 請求
   ]
 }));
@@ -103,16 +126,18 @@ app.use((err, req, res, next) => {
 
 
 app.use('/', indexRouter);
+app.use('/news', news);
 app.use('/users', usersRouter);
-app.use('/admin', adminRouter)
+app.use('/admin', adminRouter);
+app.use('/about', about);
 
 // catch 404 and forward to error handler
-app.use(function(req, res, next) {
+app.use(function (req, res, next) {
   next(createError(404));
 });
 
 // error handler
-app.use(function(err, req, res, next) {
+app.use(function (err, req, res, next) {
   // set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
