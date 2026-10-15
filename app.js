@@ -9,6 +9,7 @@ var usersRouter = require('./routes/users');
 var adminRouter = require('./routes/admin');
 var news = require('./routes/news');
 var about = require('./routes/about');
+var login = require('./routes/login')
 
 const CONFIG = require(__dirname + '/config/config');
 
@@ -23,9 +24,10 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
 
-//導入 postgresql
-const dbpg = require(__dirname + '/model/dbOperations.js');
+// 全站後台資料統一使用 SQLite
+const db = require(__dirname + '/model/dbOperations.sqlite.js');
 
 
 //驗證碼二
@@ -35,7 +37,6 @@ const expressJWT = require('express-jwt');
 app.use(expressJWT({ secret: CONFIG.jwtSecretKey }).unless({
   path: [
     /\/login/,
-    /\/news/,
     /^\/ssc(\/.*)?$/, // 確保 /ssc 及其子路徑都被正確排除
     /\/dashboard/,
     /\/forgot/,
@@ -56,6 +57,10 @@ app.use(expressJWT({ secret: CONFIG.jwtSecretKey }).unless({
       url: '/news/items',
       methods: ['GET']
     },
+    {
+      url: /^\/news\/items\/\d+$/,
+      methods: ['GET']
+    },
     // About 公開 GET
     {
       url: '/about',
@@ -72,7 +77,7 @@ app.use(expressJWT({ secret: CONFIG.jwtSecretKey }).unless({
 // 在應用程式啟動時打開數據連接資料庫
 app.use(async (req, res, next) => {
   try {
-    await dbpg.connectToDB();
+    db.connectToDB();
     next();
   } catch (error) {
     console.error('Error connecting to the database:', error);
@@ -95,7 +100,7 @@ process.on('SIGINT', async () => {
     closing = true;
     try {
       // 在 Ctrl+C 中斷前先關閉資料庫連接
-      await dbpg.closeDB();
+      db.closeDB();
       console.log('Database connection closed!');
       process.exit(0);
     } catch (error) {
@@ -126,6 +131,7 @@ app.use((err, req, res, next) => {
 
 
 app.use('/', indexRouter);
+app.use('/login', login);
 app.use('/news', news);
 app.use('/users', usersRouter);
 app.use('/admin', adminRouter);

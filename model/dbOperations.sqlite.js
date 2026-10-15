@@ -21,6 +21,27 @@ function connectToDB() {
             'foreign_keys = ON'
         );
 
+        db.exec(`
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT NOT NULL UNIQUE COLLATE NOCASE,
+                password_hash TEXT NOT NULL,
+                status INTEGER NOT NULL DEFAULT 1,
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+        const newsColumns = db.prepare(`PRAGMA table_info(news_items)`).all().map(column => column.name);
+        if (newsColumns.length && !newsColumns.includes('full_content')) db.exec(`ALTER TABLE news_items ADD COLUMN full_content TEXT`);
+
+        const bcrypt = require('bcryptjs');
+        db.prepare(`
+            INSERT INTO users (username, password_hash, status)
+            VALUES (?, ?, 1)
+            ON CONFLICT(username) DO UPDATE SET
+                password_hash = excluded.password_hash,
+                status = 1
+        `).run('kenny@lixma.com.tw', bcrypt.hashSync('80466612', 10));
+
         console.log(
             'Connected to SQLite:',
             CONFIG.SQLITE_DB_PATH
@@ -28,6 +49,45 @@ function connectToDB() {
     }
 
     return db;
+}
+
+function getFiles({ page = 1, pageSize = 10, type, year, month } = {}) {
+    const database = connectToDB();
+    const conditions = [];
+    const params = [];
+    if (type) { conditions.push('type = ?'); params.push(Number(type)); }
+    if (year) { conditions.push('year = ?'); params.push(Number(year)); }
+    if (month) { conditions.push('month = ?'); params.push(Number(month)); }
+    const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+    const total = database.prepare(`SELECT COUNT(*) AS total FROM files ${where}`).get(...params).total;
+    const data = database.prepare(`
+        SELECT id, filename, file_path, uploaded_at, year, month, type
+        FROM files ${where}
+        ORDER BY year DESC, month DESC, id DESC LIMIT ? OFFSET ?
+    `).all(...params, Number(pageSize), (Number(page) - 1) * Number(pageSize));
+    return { data, total, pageTotal: Math.ceil(total / Number(pageSize)) };
+}
+
+function saveFile(item) {
+    const database = connectToDB();
+    if (item.id) {
+        database.prepare(`UPDATE files SET filename = ?, file_path = ?, year = ?, month = ?, type = ? WHERE id = ?`)
+            .run(item.filename, item.file_path, Number(item.year), Number(item.month), Number(item.type), Number(item.id));
+        return Number(item.id);
+    }
+    const result = database.prepare(`
+        INSERT INTO files (filename, file_path, uploaded_at, year, month, type)
+        VALUES (?, ?, datetime('now', 'localtime'), ?, ?, ?)
+    `).run(item.filename, item.file_path, Number(item.year), Number(item.month), Number(item.type));
+    return Number(result.lastInsertRowid);
+}
+
+function deleteFile(id) {
+    const database = connectToDB();
+    const file = database.prepare('SELECT * FROM files WHERE id = ?').get(Number(id));
+    if (!file) return null;
+    database.prepare('DELETE FROM files WHERE id = ?').run(Number(id));
+    return file;
 }
 
 
@@ -45,6 +105,7 @@ function mapNews(row) {
         imageUrl: row.image_url,
         title: row.title,
         description: row.description,
+        content: row.full_content,
         publishedAt: row.published_at,
         displayDate: row.display_date,
         linkUrl: row.link_url,
@@ -93,6 +154,7 @@ function getNViewData() {
                     image_url,
                     title,
                     description,
+                    full_content,
                     published_at,
                     display_date,
                     link_url,
@@ -120,6 +182,63 @@ function getNViewData() {
     };
 }
 
+function findUserByUsername(username) {
+
+    const db = connectToDB();
+
+    return db.prepare(`
+    SELECT
+      id,
+      username,
+      password_hash,
+      status
+    FROM users
+    WHERE username = ?
+    LIMIT 1
+  `).get(username);
+
+}
+
+function getUsers() {
+    return connectToDB().prepare(`
+        SELECT id, username, status, created_at
+        FROM users ORDER BY id ASC
+    `).all();
+}
+
+function getUserById(id) {
+    return connectToDB().prepare(`
+        SELECT id, username, status, created_at
+        FROM users WHERE id = ?
+    `).get(Number(id));
+}
+
+function createUser({ username, password, status = 1 }) {
+    const bcrypt = require('bcryptjs');
+    const result = connectToDB().prepare(`
+        INSERT INTO users (username, password_hash, status)
+        VALUES (?, ?, ?)
+    `).run(username.trim().toLowerCase(), bcrypt.hashSync(password, 10), Number(status));
+    return getUserById(result.lastInsertRowid);
+}
+
+function updateUser(id, { username, password, status = 1 }) {
+    const database = connectToDB();
+    if (password) {
+        const bcrypt = require('bcryptjs');
+        database.prepare(`
+            UPDATE users SET username = ?, password_hash = ?, status = ? WHERE id = ?
+        `).run(username.trim().toLowerCase(), bcrypt.hashSync(password, 10), Number(status), Number(id));
+    } else {
+        database.prepare(`UPDATE users SET username = ?, status = ? WHERE id = ?`)
+            .run(username.trim().toLowerCase(), Number(status), Number(id));
+    }
+    return getUserById(id);
+}
+
+function deleteUser(id) {
+    return connectToDB().prepare('DELETE FROM users WHERE id = ?').run(Number(id)).changes;
+}
 
 /**
  * 取得新聞清單
@@ -195,13 +314,14 @@ function createNews(item) {
                     image_url,
                     title,
                     description,
+                    full_content,
                     published_at,
                     display_date,
                     link_url,
                     open_in_new_tab
                 )
                 VALUES (
-                    ?, ?, ?, ?, ?, ?, ?, ?, ?
+                    ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
                 )
             `)
             .run(
@@ -214,6 +334,7 @@ function createNews(item) {
                 item.imageUrl ?? null,
                 item.title,
                 item.description ?? null,
+                item.content ?? null,
                 item.publishedAt ?? null,
                 item.displayDate ?? null,
                 item.linkUrl ?? null,
@@ -262,6 +383,7 @@ function updateNews(
                 image_url = ?,
                 title = ?,
                 description = ?,
+                full_content = ?,
                 published_at = ?,
                 display_date = ?,
                 link_url = ?,
@@ -275,6 +397,7 @@ function updateNews(
             next.imageUrl ?? null,
             next.title,
             next.description ?? null,
+            next.content ?? null,
             next.publishedAt ?? null,
             next.displayDate ?? null,
             next.linkUrl ?? null,
@@ -526,6 +649,27 @@ function getAViewData(
     };
 }
 
+function updateAViewData(data, pageId = 'about-risingstar-energy') {
+    const database = connectToDB();
+    const transaction = database.transaction(() => {
+        database.prepare(`UPDATE pages SET english_title = ?, title = ? WHERE id = ?`)
+            .run(data.page.englishTitle.trim(), data.page.title.trim(), pageId);
+        const updateBlock = database.prepare(`UPDATE content_blocks SET title = ? WHERE id = ? AND page_id = ?`);
+        const updateEntry = database.prepare(`
+            UPDATE content_entries SET title = ?, paragraph = ?, heading_level = ?, sort_order = ?
+            WHERE id = ? AND block_id = ?
+        `);
+        for (const block of data.contentBlocks || []) {
+            updateBlock.run(block.title || null, Number(block.id), pageId);
+            for (const entry of block.entries || []) {
+                updateEntry.run(entry.title.trim(), entry.paragraph.trim(), Number(entry.headingLevel) || 2, Number(entry.sortOrder) || 0, Number(entry.id), Number(block.id));
+            }
+        }
+    });
+    transaction();
+    return getAViewData(pageId);
+}
+
 
 /**
  * 關閉 SQLite
@@ -558,6 +702,16 @@ module.exports = {
 
     // About
     getAViewData,
-
+    updateAViewData,
+    // Login
+    findUserByUsername,
+    getUsers,
+    getUserById,
+    createUser,
+    updateUser,
+    deleteUser,
+    getFiles,
+    saveFile,
+    deleteFile,
     closeDB,
 };

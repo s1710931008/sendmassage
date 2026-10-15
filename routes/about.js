@@ -48,5 +48,20 @@ router.get('/', function (req, res) {
 
 });
 
+router.put('/admin', function (req, res) {
+    try {
+        const data = req.body;
+        if (!data?.page?.englishTitle?.trim() || !data?.page?.title?.trim()) {
+            return res.status(400).json({ success: false, code: 400, message: '請完整填寫頁面標題' });
+        }
+        const invalidEntry = (data.contentBlocks || []).flatMap(block => block.entries || []).some(entry => !entry.title?.trim() || !entry.paragraph?.trim());
+        if (invalidEntry) return res.status(400).json({ success: false, code: 400, message: '段落標題與內容不能為空' });
+        return res.json({ success: true, code: 200, data: db.updateAViewData(data) });
+    } catch (error) {
+        console.error('PUT /about/admin error:', error);
+        return res.status(500).json({ success: false, code: 500, message: '關於頁面儲存失敗' });
+    }
+});
+
 
 module.exports = router;
